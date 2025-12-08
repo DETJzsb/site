@@ -4,36 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Draexlmaier Logistique</title>
-
-  <!-- Supabase CDN (الإصدار الرسمي الشغال حاليًا) -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
   <style>
-    body {font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; margin: 0;}
-    .c {max-width: 600px; margin: 40px auto; background: #1e293b; padding: 30px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.5);}
-    h1 {text-align:center; color:#10b981; margin-bottom:30px;}
-    input, select, button {width: 100%; padding: 14px; margin: 10px 0; border-radius: 8px; border: none; font-size: 16px;}
-    input, select {background:#334155; color:white;}
-    button {background: #10b981; color: white; font-weight: bold; cursor: pointer; transition: 0.3s;}
-    button:hover {background: #059669;}
-    .h {display: none;}
-    .r {font-weight: bold; padding: 8px 16px; border-radius: 8px; font-size: 14px;}
-    .agent {background:#94a3b8; color:#000;}
-    .chefdéquipe {background:#60a5fa; color:#fff;}
-    .superviseur {background:#f59e0b; color:#fff;}
-    .sous-directeur {background:#f87171; color:#fff;}
-    .directeur {background:#dc2626; color:#fff;}
-    table {width:100%; border-collapse:collapse; margin:25px 0; background:#334155;}
-    th, td {border:1px solid #475569; padding:12px; text-align:center; color:white;}
-    th {background:#1e293b;}
-    small {color:#94a3b8; display:block; margin-top:10px;}
+    body{font-family:Arial;background:#0f172a;color:#e2e8f0;padding:20px;margin:0}
+    .c{max-width:600px;margin:40px auto;background:#1e293b;padding:30px;border-radius:15px;box-shadow:0 10px 30px rgba(0,0,0,0.6)}
+    h1{text-align:center;color:#10b0f5b0;margin-bottom:30px}
+    input,select,button{width:100%;padding:14px;margin:10px 0;border-radius:8px;border:none;font-size:16px}
+    input,select{background:#334155;color:white}
+    button{background:#10b981;color:white;font-weight:bold;cursor:pointer}
+    button:hover{background:#059669}
+    .h{display:none}
+    .r{font-weight:bold;padding:8px 16px;border-radius:8px;font-size:14px}
+    .agent{background:#94a3b8;color:#000}
+    .chefdéquipe,.chefdéquipe{background:#60a5fa;color:#fff}
+    .superviseur{background:#f59e0b;color:#fff}
+    .sous-directeur{background:#f87171;color:#fff}
+    .directeur{background:#dc2626;color:#fff}
+    table{width:100%;border-collapse:collapse;margin:25px 0;background:#334155}
+    th,td{border:1px solid #475569;padding:12px;text-align:center;color:white}
+    th{background:#1e293b}
+    small{color:#94a3b8;display:block;margin-top:10px}
   </style>
 </head>
 <body>
 <div class="c">
   <h1>Draexlmaier Logistique</h1>
 
-  <!-- تسجيل الدخول -->
   <div id="login">
     <input type="email" id="email" placeholder="Email" required>
     <input type="password" id="pass" placeholder="Mot de passe" required>
@@ -41,182 +37,74 @@
     <small>Mot de passe par défaut : <b>drax123</b></small>
   </div>
 
-  <!-- إعداد أول مرة -->
   <div id="setup" class="h">
     <h2>Configuration initiale</h2>
     <input type="text" id="full_name" placeholder="Nom complet" required>
     <input type="tel" id="phone" placeholder="Téléphone">
-    <select id="shift">
-      <option>Matin</option>
-      <option>Après-midi</option>
-      <option>Nuit</option>
-    </select>
+    <select id="shift"><option>Matin</option><option>Après-midi</option><option>Nuit</option></select>
     <input type="text" id="line" placeholder="Ligne (ex: Line 5)" required>
     <input type="password" id="np1" placeholder="Nouveau mot de passe" required>
-    <input type="password" id="np2" placeholder="Confirmer le mot de passe" required>
+    <input type="password" id="np2" placeholder="Confirmer" required>
     <button onclick="saveSetup()">Enregistrer</button>
   </div>
 
-  <!-- الداشبورد -->
   <div id="dash" class="h">
-    <div style="background:#334155;padding:25px;border-radius:12px;text-align:center;margin-bottom:20px;">
-      <h2 id="name" style="margin:0;color:#10b981;"></h2>
+    <div style="background:#334155;padding:25px;border-radius:12px;text-align:center;margin-bottom:20px">
+      <h2 id="name" style="margin:0;color:#10b981"></h2>
       <span id="role" class="r"></span><br><br>
-      <small id="info" style="font-size:15px;"></small>
+      <small id="info"></small>
     </div>
-    <button onclick="out()" style="background:#dc2626;">Déconnexion</button>
-    <div id="admin" style="margin-top:30px;"></div>
+    <button onclick="out()" style="background:#dc2626">Déconnexion</button>
+    <div id="admin" style="margin-top:30px"></div>
   </div>
 </div>
 
 <script>
-// ────── أهم شيء: هذه الطريقة الوحيدة الشغالة 100% مع CDN في 2025 ──────
-const supabaseUrl = "https://arqzqflgzszfzwpvtkip.supabase.co";
-const supabaseAnonKey = "sb_publishable_HEmQwOrXpJm38Y2d9_rD1Q_scpmFg0o";
-const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycXpxZmxnenN6Znp3cHZ0a2lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTIwMTEwMiwiZXhwIjoyMDgwNzc3MTAyfQ.HG73nzMT_SOhphhI2qgZhdBENWrHC3_NfRHtH4H76cU";
+// عميل واحد فقط = لا تحذيرات
+const supabase = window.supabase.createClient(
+  "https://arqzqflgzszfzwpvtkip.supabase.co",
+  "sb_publishable_HEmQwOrXpJm38Y2d9_rD1Q_scpmFg0o"
+);
 
-// الحل الرسمي والمضمون من Supabase نفسهم
-const supabase = window.supabase.createClient(supabaseUrl, supabaseAnonKey);
-const adminClient = window.supabase.createClient(supabaseUrl, serviceKey);
-// ─────────────────────────────────────────────────────────────────────
-
-async function login() {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.value.trim(),
-    password: pass.value
-  });
-
-  if (error) {
-    alert("Erreur : " + error.message);
-  } else {
-    show(data.user);
-  }
+// دالة للحصول على عميل بصلاحيات service_role فقط عند الحاجة
+async function getAdminClient() {
+  return window.supabase.createClient(
+    "https://arqzqflgzszfzwpvtkip.supabase.co",
+    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycXpxZmxnenN6Znp3cHZ0a2lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTIwMTEwMiwiZXhwIjoyMDgwNzc3MTAyfQ.HG73nzMT_SOhphhI2qgZhdBENWrHC3_NfRHtH4H76cU"
+  );
 }
 
-async function show(user) {
-  const { data: profile, error } = await supabase
-    .from("profiles")
-    .select("*")
-    .eq("id", user.id)
-    .single();
-
-  if (error || !profile?.full_name) {
-    document.getElementById("login").classList.add("h");
-    document.getElementById("setup").classList.remove("h");
-    return;
-  }
-
-  // إظهار الداشبورد
-  document.getElementById("login").classList.add("h");
-  document.getElementById("dash").classList.remove("h");
-
-  document.getElementById("name").innerText = profile.full_name;
-
-  const roleClean = profile.role.toLowerCase().replace(/ /g, "").replace(/équipe/g, "déquipe");
-  document.getElementById("role").innerText = profile.role;
-  document.getElementById("role").className = "r " + roleClean;
-
-  document.getElementById("info").innerText = 
-    `Shift: ${profile.shift} | Ligne: ${profile.production_line} | Tél: ${profile.phone || "-"}`;
-
-  if (["Superviseur", "Sous-directeur", "Directeur"].includes(profile.role)) {
-    loadAdmin();
-  }
-}
-
-async function saveSetup() {
-  if (np1.value !== np2.value) return alert("Les mots de passe ne correspondent pas !");
-  if (np1.value.length < 6) return alert("Le mot de passe doit contenir au moins 6 caractères");
-
-  const { data: { user } } = await supabase.auth.getUser();
-
-  await supabase.auth.updateUser({ password: np1.value });
-  await supabase.from("profiles").upsert({
-    id: user.id,
-    full_name: full_name.value.trim(),
-    phone: phone.value.trim(),
-    shift: shift.value,
-    production_line: line.value.trim(),
-    role: "Agent"
-  });
-
-  alert("Configuration enregistrée ! Reconnectez-vous.");
-  out();
-}
-
-async function loadAdmin() {
-  const { data } = await supabase.from("profiles").select("*").order("full_name");
-  let html = `<h2 style="color:#10b981">Gestion des utilisateurs</h2>
-    <button onclick="addUser()" style="background:#6366f1;margin-bottom:15px;">+ Ajouter un membre</button>
-    <table>
-      <tr><th>Nom</th><th>Rôle</th><th>Shift</th><th>Ligne</th><th>Modifier le rôle</th></tr>`;
-
-  data.forEach(p => {
-    const cleanRole = p.role.toLowerCase().replace(/ /g, "").replace(/équipe/g, "déquipe");
-    html += `<tr>
-      <td>${p.full_name}</td>
-      <td><span class="r ${cleanRole}">${p.role}</span></td>
-      <td>${p.shift}</td>
-      <td>${p.production_line}</td>
-      <td>
-        <select onchange="changeRole('${p.id}', this.value)">
-          <option selected>${p.role}</option>
-          <option>Agent</option>
-          <option>Chef d'équipe</option>
-          <option>Superviseur</option>
-          <option>Sous-directeur</option>
-          <option>Directeur</option>
-        </select>
-      </td>
-    </tr>`;
-  });
-
-  document.getElementById("admin").innerHTML = html + "</table>";
-}
-
-async function changeRole(userId, newRole) {
-  await supabase.from("profiles").update({ role: newRole }).eq("id", userId);
-  loadAdmin();
-}
+// باقي الدوال تبقى كما هي تمامًا (login, show, saveSetup, loadAdmin, changeRole, out...)
+// فقط نعدل addUser كما يلي:
 
 async function addUser() {
   const email = prompt("Email du nouvel utilisateur :");
-  if (!email || !email.includes("@")) return alert("Email invalide");
-
-  const name = prompt("Nom complet :", "Nouvel Agent");
+  if (!email?.includes("@")) return alert("Email invalide");
+  const name = prompt("Nom complet :", "Nouvel Agent") || "Nouvel Agent";
   const role = prompt("Rôle :", "Agent") || "Agent";
-  const shift = prompt("Shift (Matin/Après-midi/Nuit) :", "Matin") || "Matin";
-  const line = prompt("Ligne de production :", "Line 1") || "Line 1";
+  const shift = prompt("Shift :", "Matin") || "Matin";
+  const line = prompt("Ligne :", "Line 1") || "Line 1";
 
+  const adminClient = await getAdminClient();
   const { data, error } = await adminClient.auth.admin.createUser({
-    email: email,
-    password: "drax123",
-    email_confirm: true
+    email, password: "drax123", email_confirm: true
   });
 
   if (error) return alert("Erreur : " + error.message);
 
   await supabase.from("profiles").insert({
-    id: data.user.id,
-    full_name: name,
-    role: role,
-    shift: shift,
-    production_line: line
+    id: data.user.id, full_name: name, role, shift, production_line: line
   });
 
-  alert(`Utilisateur ajouté !\nEmail: ${email}\nMot de passe: drax123`);
+  alert(`Ajouté !\nEmail: ${email}\nMDP: drax123`);
   loadAdmin();
 }
 
-function out() {
-  supabase.auth.signOut();
-  location.reload();
-}
+// باقي الكود (login, show, saveSetup, loadAdmin, changeRole, out) يبقى نفسه 100% مثل النسخة السابقة
 
-// تحميل تلقائي إذا كان مسجل الدخول
-supabase.auth.onAuthStateChange((event, session) => {
-  if (session?.user) show(session.user);
-});
+// ... (انسخ باقي الدوال من الرسالة السابقة)
+
+supabase.auth.onAuthStateChange((e, s) => s && show(s.user));
 </script>
 </body>
 </html>

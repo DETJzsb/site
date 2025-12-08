@@ -64,8 +64,8 @@ const supabaseAnonKey = "sb_publishable_HEmQwOrXpJm38Y2d9_rD1Q_scpmFg0o"; // ano
 const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycXpxZmxnenN6Znp3cHZ0a2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMDExMDIsImV4cCI6MjA4MDc3NzEwMn0.HG73nzMT_SOhphhI2qgZhdBENWrHC3_NfRHtH4H76cU";      // service_role key
 // ←←←←←←←←←←←←←←←← خلصت التغيير ←←←←←←←←←←←←←←←←
 
-const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
-const admin = Supabase.createClient(supabaseUrl, serviceKey);
+const supabase = supabase.createClient(supabaseUrl, supabaseAnonKey);
+const admin = supabase.createClient(supabaseUrl, serviceKey);
 
 async function login(){const {data,error}=await supabase.auth.signInWithPassword({email:email.value,password:pass.value});error?alert(error.message):show(data.user)}
 async function show(u){const {data:p}=await supabase.from("profiles").select().eq("id",u.id).single();

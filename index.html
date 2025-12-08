@@ -12,10 +12,10 @@
     h1 {text-align:center; color:#10b981; margin-bottom:30px; font-size:28px;}
     input, select, button {width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px;}
     input, select {background:#334155; color:white;}
-    button {background:#10b981; color:white; font-weight:bold; cursor:pointer; transition:0.3s;}
+    button {background:#10b981; color:white; font-weight:bold; cursor:pointer;}
     button:hover {background:#059669;}
     .h {display:none;}
-    .r {font-weight:bold; padding:10px 20px; border-radius:50px; font-size:15px;}
+    .r {font-weight:bold; padding:10px 20px; border-radius:50px;}
     .agent {background:#94a3b8; color:#000;}
     .chefdéquipe {background:#60a5fa; color:#fff;}
     .superviseur {background:#f59e0b; color:#fff;}
@@ -35,7 +35,7 @@
     <input type="email" id="email" placeholder="Email" required>
     <input type="password" id="pass" placeholder="Mot de passe" required>
     <button id="loginBtn">Se connecter</button>
-    <small>Admin : admin@draexlmaier.ma │ Mot de passe : drax123</small>
+    <small>Admin → admin@draexlmaier.ma │ drax123</small>
   </div>
 
   <div id="setup" class="h">
@@ -65,15 +65,10 @@
 </div>
 
 <script>
-// إخفاء تحذير LockManager (اختياري وآمن)
-console.warn = (function(orig) {
-  return function(...args) {
-    if (args[0] && typeof args[0] === 'string' && args[0].includes('LockManager')) return;
-    orig(...args);
-  };
-})(console.warn);
+// إخفاء تحذير LockManager
+console.warn = (function(o) { return function(...a) { if (a[0]?.includes?.('LockManager')) return; o(...a); }; })(console.warn);
 
-// Supabase Client
+// Supabase
 const supabase = window.supabase.createClient(
   "https://arqzqflgzszfzwpvtkip.supabase.co",
   "sb_publishable_HEmQwOrXpJm38Y2d9_rD1Q_scpmFg0o"
@@ -95,28 +90,34 @@ async function login() {
   show(data.user);
 }
 
+// تم تصليح هذه الدالة (السبب الرئيسي للخطأ)
 async function saveSetup() {
   if (np1.value !== np2.value) return alert("Les mots de passe ne correspondent pas");
   if (np1.value.length < 6) return alert("Mot de passe trop court");
 
-  const { data: { user } } = await supabase.auth.getUser();
+  // الحماية الجديدة: نتأكد أن المستخدم موجود فعلاً
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) return alert("Erreur session. Reconnectez-vous.");
+
   await supabase.auth.updateUser({ password: np1.value });
+
   await supabase.from("profiles").upsert({
     id: user.id,
     full_name: full_name.value.trim(),
-    phone: phone.value.trim(),
+    phone: phone.value.trim() || null,
     shift: shift.value,
     production_line: line.value.trim(),
     role: "Agent"
   });
-  alert("Enregistré ! Reconnectez-vous");
+
+  alert("Profil enregistré ! Vous pouvez vous connecter.");
   out();
 }
 
 async function show(user) {
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+  const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
 
-  if (!profile?.full_name) {
+  if (error || !profile?.full_name) {
     document.getElementById("login").classList.add("h");
     document.getElementById("setup").classList.remove("h");
     return;
@@ -138,7 +139,7 @@ async function show(user) {
 async function loadAdmin() {
   const { data } = await supabase.from("profiles").select("*").order("full_name");
   let html = `<h2 style="color:#10b981">Gestion des utilisateurs</h2>
-    <button onclick="addUser()" style="background:#6366f1;padding:14px;margin-bottom:15px;">+ Ajouter un membre</button>
+    <button onclick="addUser()" style="background:#6366f1;padding:14px;margin-bottom:15px;">+ Ajouter</button>
     <table><tr><th>Nom</th><th>Rôle</th><th>Shift</th><th>Ligne</th><th>Action</th></tr>`;
 
   data.forEach(p => {
@@ -191,7 +192,7 @@ async function addUser() {
     role, shift, production_line: line
   });
 
-  alert(`Ajouté !\nEmail: ${email}\nMot de passe: drax123`);
+  alert(`Ajouté !\nEmail: ${email}\nMDP: drax123`);
   loadAdmin();
 }
 
@@ -204,7 +205,6 @@ function out() {
 document.getElementById("loginBtn").addEventListener("click", login);
 document.getElementById("setupBtn").addEventListener("click", saveSetup);
 
-// تحميل تلقائي
 supabase.auth.onAuthStateChange((_, session) => {
   if (session?.user) show(session.user);
 });

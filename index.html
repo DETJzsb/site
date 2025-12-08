@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Draexlmaier Logistique</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+  body{font-family:Arial;background:#0f172a;color:#e2e8f0;padding:20px;margin:0}
+  .c{max-width:600px;margin:auto;background:#1e293b;padding:30px;border-radius:15px}
+  input,select,button{width:100%;padding:12px;margin:8px 0;border-radius:8px;border:none;font-size:16px}
+  button{background:#10b981;color:#fff;cursor:pointer}
+  .h{display:none}
+  .r{font-weight:bold;padding:8px;border-radius:8px;display:inline-block;margin:10px 0}
+  .agent{background:#94a3b8;color:#000}
+  .chef{background:#60a5fa;color:#fff}
+  .sup{background:#f59e0b;color:#fff}
+  .sous{background:#f87171;color:#fff}
+  .dir{background:#dc2626;color:#fff}
+  table{width:100%;border-collapse:collapse;margin:20px 0}
+  th,td{border:1px solid #475569;padding:10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="c">
+  <h1 style="text-align:center;color:#10b981">Draexlmaier Logistique</h1>
+
+  <!-- تسجيل الدخول -->
+  <div id="login">
+    <input type="email" id="email" placeholder="Email"><br>
+    <input type="password" id="pass" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <small>Default password: drax123</small>
+  </div>
+
+  <!-- إعداد أول مرة -->
+  <div id="setup" class="h">
+    <h2>First-time setup</h2>
+    <input type="text" id="full_name" placeholder="Full Name"><br>
+    <input type="tel" id="phone" placeholder="Phone"><br>
+    <select id="shift"><option>Matin</option><option>Après-midi</option><option>Nuit</option></select><br>
+    <input type="text" id="line" placeholder="Line (ex: Line 5)"><br>
+    <input type="password" id="np1" placeholder="New Password"><br>
+    <input type="password" id="np2" placeholder="Confirm"><br>
+    <button onclick="saveSetup()">Save</button>
+  </div>
+
+  <!-- الداشبورد -->
+  <div id="dash" class="h">
+    <div style="background:#334155;padding:20px;border-radius:12px;text-align:center">
+      <h2 id="name"></h2>
+      <span id="role" class="r"></span><br>
+      <small id="info"></small>
+    </div>
+    <button onclick="out()">Logout</button>
+    <div id="admin"></div>
+  </div>
+</div>
+
+<script>
+// ←←←←←←←←←←←←←←←← غيّر الـ 3 أسطر دول بس ←←←←←←←←←←←←←←←←
+const supabaseUrl = "https://arqzqflgzszfzwpvtkip.supabase.co";          // ضع رابط مشروعك
+const supabaseAnonKey = "sb_publishable_HEmQwOrXpJm38Y2d9_rD1Q_scpmFg0o"; // anon key
+const serviceKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycXpxZmxnenN6Znp3cHZ0a2lwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUyMDExMDIsImV4cCI6MjA4MDc3NzEwMn0.HG73nzMT_SOhphhI2qgZhdBENWrHC3_NfRHtH4H76cU";      // service_role key
+// ←←←←←←←←←←←←←←←← خلصت التغيير ←←←←←←←←←←←←←←←←
+
+const supabase = Supabase.createClient(supabaseUrl, supabaseAnonKey);
+const admin = Supabase.createClient(supabaseUrl, serviceKey);
+
+async function login(){const {data,error}=await supabase.auth.signInWithPassword({email:email.value,password:pass.value});error?alert(error.message):show(data.user)}
+async function show(u){const {data:p}=await supabase.from("profiles").select().eq("id",u.id).single();
+  if(!p||!p.full_name){document.getElementById("setup").classList.remove("h");return}
+  document.getElementById("login").classList.add("h");document.getElementById("dash").classList.remove("h");
+  document.getElementById("name").innerText=p.full_name;
+  document.getElementById("role").innerText=p.role;document.getElementById("role").className="r "+p.role.toLowerCase().replace(/ /g,"").replace(/é/g,"e");
+  document.getElementById("info").innerText=`Shift: ${p.shift} | Line: ${p.production_line} | Phone: ${p.phone||"-"}`;
+  if(["Superviseur","Sous-directeur","Directeur"].includes(p.role)) loadAdmin();
+}
+async function saveSetup(){
+  if(np1.value!==np2.value)return alert("Passwords don't match");
+  const user=(await supabase.auth.getUser()).data.user;
+  await supabase.auth.updateUser({password:np1.value});
+  await supabase.from("profiles").upsert({id:user.id,full_name:full_name.value,phone:phone.value,shift:shift.value,production_line:line.value});
+  alert("Saved! Login again");out();
+}
+async function loadAdmin(){
+  const {data}=await supabase.from("profiles").select();
+  let h="<h2>Manage Users</h2><button onclick='add()'>Add Member</button><table><tr><th>Name</th><th>Role</th><th>Shift</th><th>Line</th><th>Change Role</th></tr>";
+  data.forEach(x=>h+=`<tr><td>${x.full_name}</td><td>${x.role}</td><td>${x.shift}</td><td>${x.production_line}</td>
+    <td><select onchange="ch('${x.id}',this.value)">
+      <option>${x.role}</option><option>Agent</option><option>Chef d'équipe</option><option>Superviseur</option><option>Sous-directeur</option><option>Directeur</option>
+    </select></td></tr>`);
+  document.getElementById("admin").innerHTML=h+"</table>";
+}
+async function ch(id,r){await supabase.from("profiles").update({role:r}).eq("id",id);loadAdmin()}
+function add(){prompt("Email")&&prompt("Name")&&prompt("Role (Agent/Chef/Superviseur...)")&&prompt("Shift")&&prompt("Line")&&addReal()}
+async function addReal(){
+  const e=prompt("Email"),n=prompt("Name"),r=prompt("Role"),s=prompt("Shift"),l=prompt("Line");
+  const {data:user}=await admin.auth.admin.createUser({email:e,password:"drax123",email_confirm:true});
+  await supabase.from("profiles").insert({id:user.user.id,full_name:n,role:r,shift:s,production_line:l});
+  alert("Done! Password: drax123");loadAdmin();
+}
+function out(){supabase.auth.signOut();location.reload()}
+supabase.auth.onAuthStateChange((e,s)=>s&&show(s.user));
+</script>
+</body>
+</html>

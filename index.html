@@ -198,7 +198,8 @@ async function addUser() {
 
 function out() {
   supabase.auth.signOut();
-  location.reload();
+  localStorage.clear();
+  location.href = location.href;
 }
 
 // ربط الأزرار

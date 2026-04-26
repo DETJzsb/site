@@ -1,214 +1,143 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Draexlmaier Logistique</title>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-  <style>
-    body {font-family: Arial, sans-serif; background: #0f172a; color: #e2e8f0; padding: 20px; margin: 0;}
-    .c {max-width: 600px; margin: 40px auto; background: #1e293b; padding: 35px; border-radius: 16px; box-shadow: 0 15px 35px rgba(0,0,0,0.6);}
-    h1 {text-align:center; color:#10b981; margin-bottom:30px; font-size:28px;}
-    input, select, button {width: 100%; padding: 14px; margin: 10px 0; border-radius: 10px; border: none; font-size: 16px;}
-    input, select {background:#334155; color:white;}
-    button {background:#10b981; color:white; font-weight:bold; cursor:pointer;}
-    button:hover {background:#059669;}
-    .h {display:none;}
-    .r {font-weight:bold; padding:10px 20px; border-radius:50px;}
-    .agent {background:#94a3b8; color:#000;}
-    .chefdéquipe {background:#60a5fa; color:#fff;}
-    .superviseur {background:#f59e0b; color:#fff;}
-    .sous-directeur {background:#f87171; color:#fff;}
-    .directeur {background:#dc2626; color:#fff;}
-    table {width:100%; border-collapse:collapse; margin:30px 0; background:#334155; border-radius:10px; overflow:hidden;}
-    th, td {padding:14px; text-align:center; border-bottom:1px solid #475569;}
-    th {background:#1e293b; color:#10b981;}
-    small {color:#94a3b8; display:block; margin-top:15px; text-align:center;}
-  </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Cable Check Validation Tool</title>
+  <link rel="stylesheet" href="style.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
-<div class="c">
-  <h1>Draexlmaier Logistique</h1>
 
-  <div id="login">
-    <input type="email" id="email" placeholder="Email" required>
-    <input type="password" id="pass" placeholder="Mot de passe" required>
-    <button id="loginBtn">Se connecter</button>
-    <small>Admin → admin@draexlmaier.ma │ drax123</small>
-  </div>
-
-  <div id="setup" class="h">
-    <h2>Configuration initiale</h2>
-    <input type="text" id="full_name" placeholder="Nom complet" required>
-    <input type="tel" id="phone" placeholder="Téléphone">
-    <select id="shift">
-      <option>Matin</option>
-      <option>Après-midi</option>
-      <option>Nuit</option>
-    </select>
-    <input type="text" id="line" placeholder="Ligne (ex: Line 5)" required>
-    <input type="password" id="np1" placeholder="Nouveau mot de passe" required>
-    <input type="password" id="np2" placeholder="Confirmer" required>
-    <button id="setupBtn">Enregistrer</button>
-  </div>
-
-  <div id="dash" class="h">
-    <div style="background:#334155;padding:30px;border-radius:16px;text-align:center;margin-bottom:25px;">
-      <h2 id="name" style="margin:0;color:#10b981;font-size:26px;"></h2>
-      <span id="role" class="r"></span><br><br>
-      <small id="info" style="font-size:16px;"></small>
+  <!-- HEADER -->
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="logo">
+        <span class="logo-icon">⬡</span>
+        <span class="logo-text">CableCheck <span class="logo-sub">Validation Tool</span></span>
+      </div>
+      <div class="header-step-indicator" id="stepIndicator">
+        <span class="step active" data-step="1">01 Upload</span>
+        <span class="step-divider">›</span>
+        <span class="step" data-step="2">02 Results</span>
+      </div>
     </div>
-    <button onclick="out()" style="background:#dc2626;">Déconnexion</button>
-    <div id="admin" style="margin-top:30px;"></div>
-  </div>
-</div>
+  </header>
 
-<script>
-// إخفاء تحذير LockManager
-console.warn = (function(o) { return function(...a) { if (a[0]?.includes?.('LockManager')) return; o(...a); }; })(console.warn);
+  <!-- PAGE 1: UPLOAD -->
+  <main id="page-upload" class="page active">
+    <div class="page-content">
+      <div class="page-title-block">
+        <h1>Upload Files</h1>
+        <p class="subtitle">Load the Bedarf and Check Excel files to begin validation.</p>
+      </div>
 
-// Supabase
-const supabase = window.supabase.createClient(
-  "https://arqzqflgzszfzwpvtkip.supabase.co",
-  "sb_publishable_HEmQwOrXpJm38Y2d9_rD1Q_scpmFg0o"
-);
+      <div class="upload-grid">
+        <!-- Bedarf Upload -->
+        <div class="upload-card" id="card-bedarf">
+          <div class="upload-card-header">
+            <span class="card-tag">FILE 01</span>
+            <h2>Bedarf File</h2>
+            <p class="card-desc">Expected columns: <code>Cable (Count Fpr)</code>, <code>Usage % (Verbrauch)</code>, <code>BESO</code></p>
+          </div>
+          <label class="drop-zone" id="dropBedarf" for="inputBedarf">
+            <div class="drop-icon">📂</div>
+            <div class="drop-label">Click to select or drag & drop</div>
+            <div class="drop-hint">.xlsx / .xls files only</div>
+            <input type="file" id="inputBedarf" accept=".xlsx,.xls" hidden />
+          </label>
+          <div class="file-status" id="statusBedarf">No file selected</div>
+        </div>
 
-async function getAdminClient() {
-  return window.supabase.createClient(
-    "https://arqzqflgzszfzwpvtkip.supabase.co",
-    "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFycXpxZmxnenN6Znp3cHZ0a2lwIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2NTIwMTEwMiwiZXhwIjoyMDgwNzc3MTAyfQ.HG73nzMT_SOhphhI2qgZhdBENWrHC3_NfRHtH4H76cU"
-  );
-}
+        <!-- Check Upload -->
+        <div class="upload-card" id="card-check">
+          <div class="upload-card-header">
+            <span class="card-tag">FILE 02</span>
+            <h2>Check File</h2>
+            <p class="card-desc">Expected column: <code>Cable</code></p>
+          </div>
+          <label class="drop-zone" id="dropCheck" for="inputCheck">
+            <div class="drop-icon">📂</div>
+            <div class="drop-label">Click to select or drag & drop</div>
+            <div class="drop-hint">.xlsx / .xls files only</div>
+            <input type="file" id="inputCheck" accept=".xlsx,.xls" hidden />
+          </label>
+          <div class="file-status" id="statusCheck">No file selected</div>
+        </div>
+      </div>
 
-async function login() {
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.value.trim(),
-    password: pass.value
-  });
-  if (error) return alert("Erreur : " + error.message);
-  show(data.user);
-}
+      <div class="run-section">
+        <button class="btn-run" id="btnRun" disabled>
+          <span class="btn-icon">▶</span> Run Validation
+        </button>
+        <div class="run-hint" id="runHint">Upload both files to continue.</div>
+      </div>
+    </div>
+  </main>
 
-// تم تصليح هذه الدالة (السبب الرئيسي للخطأ)
-async function saveSetup() {
-  if (np1.value !== np2.value) return alert("Les mots de passe ne correspondent pas");
-  if (np1.value.length < 6) return alert("Mot de passe trop court");
+  <!-- PAGE 2: RESULTS -->
+  <main id="page-results" class="page">
+    <div class="page-content">
 
-  // الحماية الجديدة: نتأكد أن المستخدم موجود فعلاً
-  const { data: { user }, error: userError } = await supabase.auth.getUser();
-  if (userError || !user) return alert("Erreur session. Reconnectez-vous.");
+      <div class="results-topbar">
+        <div class="page-title-block">
+          <h1>Validation Results</h1>
+          <p class="subtitle" id="resultsMeta">—</p>
+        </div>
+        <button class="btn-back" id="btnBack">← New Validation</button>
+      </div>
 
-  await supabase.auth.updateUser({ password: np1.value });
+      <!-- Summary -->
+      <div class="summary-strip">
+        <div class="summary-card total">
+          <div class="summary-num" id="sumTotal">0</div>
+          <div class="summary-label">Total Cables</div>
+        </div>
+        <div class="summary-card ok">
+          <div class="summary-num" id="sumOk">0</div>
+          <div class="summary-label">OK</div>
+        </div>
+        <div class="summary-card warning">
+          <div class="summary-num" id="sumWarn">0</div>
+          <div class="summary-label">Warnings</div>
+        </div>
+        <div class="summary-card error">
+          <div class="summary-num" id="sumErr">0</div>
+          <div class="summary-label">Errors</div>
+        </div>
+      </div>
 
-  await supabase.from("profiles").upsert({
-    id: user.id,
-    full_name: full_name.value.trim(),
-    phone: phone.value.trim() || null,
-    shift: shift.value,
-    production_line: line.value.trim(),
-    role: "Agent"
-  });
+      <!-- Filters -->
+      <div class="filter-bar">
+        <span class="filter-label">Filter:</span>
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="ERROR">Errors</button>
+        <button class="filter-btn" data-filter="WARNING">Warnings</button>
+        <button class="filter-btn" data-filter="OK">OK</button>
+      </div>
 
-  alert("Profil enregistré ! Vous pouvez vous connecter.");
-  out();
-}
+      <!-- Table -->
+      <div class="table-wrapper">
+        <table class="results-table" id="resultsTable">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Cable</th>
+              <th>Usage %</th>
+              <th>BESO</th>
+              <th>Status</th>
+              <th>Reason</th>
+            </tr>
+          </thead>
+          <tbody id="resultsBody">
+          </tbody>
+        </table>
+        <div class="no-results" id="noResults" style="display:none;">No rows match the selected filter.</div>
+      </div>
 
-async function show(user) {
-  const { data: profile, error } = await supabase.from("profiles").select("*").eq("id", user.id).single();
+    </div>
+  </main>
 
-  if (error || !profile?.full_name) {
-    document.getElementById("login").classList.add("h");
-    document.getElementById("setup").classList.remove("h");
-    return;
-  }
-
-  document.getElementById("login").classList.add("h");
-  document.getElementById("dash").classList.remove("h");
-  document.getElementById("name").innerText = profile.full_name;
-
-  const roleClass = profile.role.toLowerCase().replace(/ /g,"").replace("équipe","déquipe");
-  document.getElementById("role").innerText = profile.role;
-  document.getElementById("role").className = "r " + roleClass;
-
-  document.getElementById("info").innerText = `Shift: ${profile.shift} | Ligne: ${profile.production_line} | Tél: ${profile.phone || '-'}`;
-
-  if (["Superviseur","Sous-directeur","Directeur"].includes(profile.role)) loadAdmin();
-}
-
-async function loadAdmin() {
-  const { data } = await supabase.from("profiles").select("*").order("full_name");
-  let html = `<h2 style="color:#10b981">Gestion des utilisateurs</h2>
-    <button onclick="addUser()" style="background:#6366f1;padding:14px;margin-bottom:15px;">+ Ajouter</button>
-    <table><tr><th>Nom</th><th>Rôle</th><th>Shift</th><th>Ligne</th><th>Action</th></tr>`;
-
-  data.forEach(p => {
-    const rc = p.role.toLowerCase().replace(/ /g,"").replace("équipe","déquipe");
-    html += `<tr>
-      <td>${p.full_name}</td>
-      <td><span class="r ${rc}">${p.role}</span></td>
-      <td>${p.shift}</td>
-      <td>${p.production_line}</td>
-      <td>
-        <select onchange="changeRole('${p.id}', this.value)">
-          <option selected>${p.role}</option>
-          <option>Agent</option>
-          <option>Chef d'équipe</option>
-          <option>Superviseur</option>
-          <option>Sous-directeur</option>
-          <option>Directeur</option>
-        </select>
-      </td>
-    </tr>`;
-  });
-
-  document.getElementById("admin").innerHTML = html + "</table>";
-}
-
-async function changeRole(id, role) {
-  await supabase.from("profiles").update({ role }).eq("id", id);
-  loadAdmin();
-}
-
-async function addUser() {
-  const email = prompt("Email :");
-  if (!email?.includes("@")) return alert("Email invalide");
-
-  const name = prompt("Nom complet :", "Nouvel Agent") || "Nouvel Agent";
-  const role = prompt("Rôle :", "Agent") || "Agent";
-  const shift = prompt("Shift :", "Matin") || "Matin";
-  const line = prompt("Ligne :", "Line 1") || "Line 1";
-
-  const adminClient = await getAdminClient();
-  const { data, error } = await adminClient.auth.admin.createUser({
-    email, password: "drax123", email_confirm: true
-  });
-
-  if (error) return alert(error.message);
-
-  await supabase.from("profiles").insert({
-    id: data.user.id,
-    full_name: name,
-    role, shift, production_line: line
-  });
-
-  alert(`Ajouté !\nEmail: ${email}\nMDP: drax123`);
-  loadAdmin();
-}
-
-function out() {
-  supabase.auth.signOut();
-  localStorage.clear();
-  location.href = location.href;
-}
-
-// ربط الأزرار
-document.getElementById("loginBtn").addEventListener("click", login);
-document.getElementById("setupBtn").addEventListener("click", saveSetup);
-
-supabase.auth.onAuthStateChange((_, session) => {
-  if (session?.user) show(session.user);
-});
-</script>
+  <script src="app.js"></script>
 </body>
 </html>

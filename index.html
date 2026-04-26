@@ -1,138 +1,476 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Cable Check Validation Tool</title>
-  <link rel="stylesheet" href="style.css" />
+  <title>CableCheck — Validation Tool</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
-  <!-- HEADER -->
-  <header class="app-header">
+  <!-- ══════════════════════ HEADER ══════════════════════ -->
+  <header class="header">
     <div class="header-inner">
       <div class="logo">
-        <span class="logo-icon">⬡</span>
-        <span class="logo-text">CableCheck <span class="logo-sub">Validation Tool</span></span>
+        <div class="logo-hex">
+          <svg viewBox="0 0 36 36" width="36" height="36">
+            <polygon points="18,2 32,10 32,26 18,34 4,26 4,10" fill="#0f172a" stroke="#3b82f6" stroke-width="1.5"/>
+            <polygon points="18,7 27,12 27,24 18,29 9,24 9,12" fill="#1e3a8a" stroke="#60a5fa" stroke-width="0.8"/>
+            <circle cx="18" cy="18" r="4" fill="#3b82f6"/>
+            <line x1="18" y1="10" x2="18" y2="14" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="23.2" y1="21" x2="19.9" y2="19" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+            <line x1="12.8" y1="21" x2="16.1" y2="19" stroke="#93c5fd" stroke-width="1.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="logo-text">
+          <span class="logo-name">CableCheck</span>
+          <span class="logo-ver">v1.0</span>
+        </div>
+        <div class="logo-divider"></div>
+        <span class="logo-subtitle">Validation Suite</span>
       </div>
-      <div class="header-step-indicator" id="stepIndicator">
-        <span class="step active" data-step="1">01 Upload</span>
-        <span class="step-divider">›</span>
-        <span class="step" data-step="2">02 Results</span>
-      </div>
+      <nav class="stepper-nav" id="stepperNav">
+        <div class="step-item active" id="sn1">
+          <div class="step-num">1</div>
+          <span>Upload</span>
+        </div>
+        <div class="step-connector"></div>
+        <div class="step-item" id="sn2">
+          <div class="step-num">2</div>
+          <span>Results</span>
+        </div>
+      </nav>
     </div>
   </header>
 
-  <!-- PAGE 1: UPLOAD -->
+  <!-- ══════════════════════ PAGE 1: UPLOAD ══════════════════════ -->
   <main id="page-upload" class="page active">
-    <div class="page-content">
-      <div class="page-title-block">
-        <h1>Upload Files</h1>
-        <p class="subtitle">Load the Bedarf and Check Excel files to begin validation.</p>
-      </div>
 
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-bg-art">
+        <svg viewBox="0 0 1200 280" preserveAspectRatio="xMidYMid slice" width="100%" height="100%">
+          <defs>
+            <radialGradient id="rg1" cx="30%" cy="50%" r="60%">
+              <stop offset="0%" stop-color="#1e40af" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+            </radialGradient>
+            <radialGradient id="rg2" cx="80%" cy="40%" r="50%">
+              <stop offset="0%" stop-color="#4f46e5" stop-opacity="0.3"/>
+              <stop offset="100%" stop-color="#0f172a" stop-opacity="0"/>
+            </radialGradient>
+            <pattern id="dotgrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <circle cx="1" cy="1" r="0.8" fill="#3b82f6" opacity="0.25"/>
+            </pattern>
+          </defs>
+          <rect width="1200" height="280" fill="url(#dotgrid)"/>
+          <rect width="1200" height="280" fill="url(#rg1)"/>
+          <rect width="1200" height="280" fill="url(#rg2)"/>
+          <!-- Cable trace lines -->
+          <path d="M0,180 C150,140 250,200 400,160 S600,120 800,150 S1000,180 1200,140" stroke="#3b82f6" stroke-width="2" fill="none" opacity="0.35"/>
+          <path d="M0,200 C100,160 300,220 500,180 S750,150 1000,170 S1150,200 1200,160" stroke="#60a5fa" stroke-width="1.5" fill="none" opacity="0.2"/>
+          <path d="M0,160 C200,120 350,180 600,140 S900,110 1200,130" stroke="#1d4ed8" stroke-width="1" fill="none" opacity="0.3"/>
+          <!-- Nodes -->
+          <g opacity="0.8">
+            <circle cx="200" cy="160" r="6" fill="#3b82f6"/>
+            <circle cx="200" cy="160" r="14" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+            <circle cx="200" cy="160" r="22" fill="none" stroke="#3b82f6" stroke-width="0.5" opacity="0.2"/>
+          </g>
+          <g opacity="0.8">
+            <circle cx="500" cy="148" r="6" fill="#60a5fa"/>
+            <circle cx="500" cy="148" r="14" fill="none" stroke="#60a5fa" stroke-width="1" opacity="0.4"/>
+          </g>
+          <g opacity="0.8">
+            <circle cx="850" cy="158" r="6" fill="#3b82f6"/>
+            <circle cx="850" cy="158" r="14" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.4"/>
+          </g>
+          <!-- Mini nodes -->
+          <circle cx="350" cy="172" r="3" fill="#93c5fd" opacity="0.5"/>
+          <circle cx="670" cy="142" r="3" fill="#93c5fd" opacity="0.5"/>
+          <circle cx="1000" cy="162" r="3" fill="#93c5fd" opacity="0.5"/>
+        </svg>
+      </div>
+      <div class="hero-content">
+        <div class="hero-pill">
+          <span class="hero-pill-dot"></span>
+          Cable Network Validation
+        </div>
+        <h1 class="hero-h1">Upload &amp; Validate<br><span class="hero-accent">Cable Files</span></h1>
+        <p class="hero-p">Automatically cross-reference Bedarf entries, flag usage overruns, and surface missing cables — all in one click.</p>
+        <div class="hero-stats">
+          <div class="hstat">
+            <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+              <path d="M10 3v14M3 10l7 7 7-7" stroke="#60a5fa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Drag &amp; Drop Excel</span>
+          </div>
+          <div class="hstat">
+            <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+              <circle cx="10" cy="10" r="7" stroke="#60a5fa" stroke-width="1.5"/>
+              <path d="M7 10l2 2 4-4" stroke="#60a5fa" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <span>Instant Results</span>
+          </div>
+          <div class="hstat">
+            <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+              <rect x="3" y="3" width="14" height="14" rx="2.5" stroke="#60a5fa" stroke-width="1.5"/>
+              <path d="M7 10h6M10 7v6" stroke="#60a5fa" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <span>100% Browser-Side</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Upload cards -->
+    <section class="upload-section">
       <div class="upload-grid">
-        <!-- Bedarf Upload -->
-        <div class="upload-card" id="card-bedarf">
-          <div class="upload-card-header">
-            <span class="card-tag">FILE 01</span>
-            <h2>Bedarf File</h2>
-            <p class="card-desc">Expected columns: <code>Cable (Count Fpr)</code>, <code>Usage % (Verbrauch)</code>, <code>BESO</code></p>
+
+        <!-- BEDARF CARD -->
+        <div class="ucard" id="card-bedarf">
+          <div class="ucard-header">
+            <div class="ucard-badge bedarf-badge">
+              <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+                <rect x="6" y="2" width="36" height="44" rx="5" fill="#1e3a8a"/>
+                <rect x="6" y="2" width="36" height="44" rx="5" stroke="#3b82f6" stroke-width="1.5"/>
+                <rect x="12" y="12" width="24" height="3.5" rx="1.75" fill="#60a5fa" opacity="0.9"/>
+                <rect x="12" y="19" width="18" height="2.5" rx="1.25" fill="#93c5fd" opacity="0.65"/>
+                <rect x="12" y="25" width="22" height="2.5" rx="1.25" fill="#93c5fd" opacity="0.55"/>
+                <rect x="12" y="31" width="14" height="2.5" rx="1.25" fill="#93c5fd" opacity="0.45"/>
+                <!-- Lines = table grid feel -->
+                <line x1="12" y1="17" x2="36" y2="17" stroke="#1e40af" stroke-width="0.8" opacity="0.6"/>
+                <line x1="12" y1="23" x2="36" y2="23" stroke="#1e40af" stroke-width="0.8" opacity="0.6"/>
+                <line x1="12" y1="29" x2="36" y2="29" stroke="#1e40af" stroke-width="0.8" opacity="0.6"/>
+                <line x1="12" y1="35" x2="36" y2="35" stroke="#1e40af" stroke-width="0.8" opacity="0.6"/>
+                <!-- Corner dog-ear -->
+                <path d="M36 2v10h10" fill="none" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M36 2l10 10" stroke="#3b82f6" stroke-width="1.5" stroke-linecap="round"/>
+                <!-- "B" label circle -->
+                <circle cx="38" cy="40" r="8" fill="#1e40af" stroke="#3b82f6" stroke-width="1.5"/>
+                <text x="38" y="44" text-anchor="middle" fill="#bfdbfe" font-size="10" font-weight="700" font-family="sans-serif">B</text>
+              </svg>
+            </div>
+            <div class="ucard-meta">
+              <span class="ucard-tag">FILE 01</span>
+              <h2 class="ucard-title">Bedarf File</h2>
+              <p class="ucard-cols">
+                <span class="col-chip">Cable (Count Fpr)</span>
+                <span class="col-chip">Usage %</span>
+                <span class="col-chip">BESO</span>
+              </p>
+            </div>
           </div>
-          <label class="drop-zone" id="dropBedarf" for="inputBedarf">
-            <div class="drop-icon">📂</div>
-            <div class="drop-label">Click to select or drag & drop</div>
-            <div class="drop-hint">.xlsx / .xls files only</div>
-            <input type="file" id="inputBedarf" accept=".xlsx,.xls" hidden />
+
+          <label class="dropzone" id="dropBedarf" for="inputBedarf">
+            <div class="dz-body">
+              <div class="dz-upload-icon">
+                <svg viewBox="0 0 56 56" fill="none" width="56" height="56">
+                  <circle cx="28" cy="28" r="26" fill="#0f172a" stroke="#1e3a8a" stroke-width="1.5"/>
+                  <path d="M20 32V36a1 1 0 001 1h14a1 1 0 001-1v-4" stroke="#3b82f6" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M23 26l5-5 5 5" stroke="#60a5fa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="28" y1="21" x2="28" y2="33" stroke="#60a5fa" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <p class="dz-main-text">Drop your Excel file here</p>
+              <p class="dz-sub-text">or <span class="dz-browse">click to browse</span></p>
+              <p class="dz-formats">.xlsx &nbsp;/&nbsp; .xls</p>
+            </div>
+            <input type="file" id="inputBedarf" accept=".xlsx,.xls" hidden/>
           </label>
-          <div class="file-status" id="statusBedarf">No file selected</div>
+
+          <div class="file-status-row" id="statusBedarf">
+            <div class="fsr-icon fsr-idle">
+              <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+                <line x1="8" y1="5" x2="8" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="8" cy="11.5" r="0.8" fill="currentColor"/>
+              </svg>
+            </div>
+            <span class="fsr-text">No file selected</span>
+          </div>
         </div>
 
-        <!-- Check Upload -->
-        <div class="upload-card" id="card-check">
-          <div class="upload-card-header">
-            <span class="card-tag">FILE 02</span>
-            <h2>Check File</h2>
-            <p class="card-desc">Expected column: <code>Cable</code></p>
+        <!-- CHECK CARD -->
+        <div class="ucard" id="card-check">
+          <div class="ucard-header">
+            <div class="ucard-badge check-badge">
+              <svg viewBox="0 0 48 48" fill="none" width="48" height="48">
+                <rect x="6" y="2" width="36" height="44" rx="5" fill="#2e1065"/>
+                <rect x="6" y="2" width="36" height="44" rx="5" stroke="#7c3aed" stroke-width="1.5"/>
+                <rect x="12" y="12" width="24" height="3.5" rx="1.75" fill="#a78bfa" opacity="0.9"/>
+                <rect x="12" y="19" width="18" height="2.5" rx="1.25" fill="#c4b5fd" opacity="0.65"/>
+                <rect x="12" y="25" width="22" height="2.5" rx="1.25" fill="#c4b5fd" opacity="0.55"/>
+                <rect x="12" y="31" width="14" height="2.5" rx="1.25" fill="#c4b5fd" opacity="0.45"/>
+                <line x1="12" y1="17" x2="36" y2="17" stroke="#4c1d95" stroke-width="0.8" opacity="0.6"/>
+                <line x1="12" y1="23" x2="36" y2="23" stroke="#4c1d95" stroke-width="0.8" opacity="0.6"/>
+                <line x1="12" y1="29" x2="36" y2="29" stroke="#4c1d95" stroke-width="0.8" opacity="0.6"/>
+                <line x1="12" y1="35" x2="36" y2="35" stroke="#4c1d95" stroke-width="0.8" opacity="0.6"/>
+                <path d="M36 2v10h10" fill="none" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M36 2l10 10" stroke="#7c3aed" stroke-width="1.5" stroke-linecap="round"/>
+                <circle cx="38" cy="40" r="8" fill="#2e1065" stroke="#7c3aed" stroke-width="1.5"/>
+                <text x="38" y="44" text-anchor="middle" fill="#ddd6fe" font-size="10" font-weight="700" font-family="sans-serif">C</text>
+              </svg>
+            </div>
+            <div class="ucard-meta">
+              <span class="ucard-tag check-tag">FILE 02</span>
+              <h2 class="ucard-title">Check File</h2>
+              <p class="ucard-cols">
+                <span class="col-chip col-chip-purple">Cable</span>
+              </p>
+            </div>
           </div>
-          <label class="drop-zone" id="dropCheck" for="inputCheck">
-            <div class="drop-icon">📂</div>
-            <div class="drop-label">Click to select or drag & drop</div>
-            <div class="drop-hint">.xlsx / .xls files only</div>
-            <input type="file" id="inputCheck" accept=".xlsx,.xls" hidden />
+
+          <label class="dropzone" id="dropCheck" for="inputCheck">
+            <div class="dz-body">
+              <div class="dz-upload-icon dz-upload-purple">
+                <svg viewBox="0 0 56 56" fill="none" width="56" height="56">
+                  <circle cx="28" cy="28" r="26" fill="#0f172a" stroke="#2e1065" stroke-width="1.5"/>
+                  <path d="M20 32V36a1 1 0 001 1h14a1 1 0 001-1v-4" stroke="#7c3aed" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <path d="M23 26l5-5 5 5" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+                  <line x1="28" y1="21" x2="28" y2="33" stroke="#a78bfa" stroke-width="1.8" stroke-linecap="round"/>
+                </svg>
+              </div>
+              <p class="dz-main-text">Drop your Excel file here</p>
+              <p class="dz-sub-text">or <span class="dz-browse dz-browse-purple">click to browse</span></p>
+              <p class="dz-formats">.xlsx &nbsp;/&nbsp; .xls</p>
+            </div>
+            <input type="file" id="inputCheck" accept=".xlsx,.xls" hidden/>
           </label>
-          <div class="file-status" id="statusCheck">No file selected</div>
+
+          <div class="file-status-row" id="statusCheck">
+            <div class="fsr-icon fsr-idle">
+              <svg viewBox="0 0 16 16" fill="none" width="14" height="14">
+                <circle cx="8" cy="8" r="7" stroke="currentColor" stroke-width="1.3"/>
+                <line x1="8" y1="5" x2="8" y2="9" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+                <circle cx="8" cy="11.5" r="0.8" fill="currentColor"/>
+              </svg>
+            </div>
+            <span class="fsr-text">No file selected</span>
+          </div>
         </div>
       </div>
 
-      <div class="run-section">
-        <button class="btn-run" id="btnRun" disabled>
-          <span class="btn-icon">▶</span> Run Validation
-        </button>
-        <div class="run-hint" id="runHint">Upload both files to continue.</div>
+      <!-- Run area -->
+      <div class="run-block">
+        <div class="progress-track">
+          <div class="progress-fill" id="progressFill" style="width:0%"></div>
+        </div>
+        <div class="run-row">
+          <p class="run-hint" id="runHint">Upload both files to unlock validation.</p>
+          <button class="btn-run" id="btnRun" disabled>
+            <span class="btn-run-content">
+              <svg viewBox="0 0 20 20" fill="none" width="18" height="18">
+                <polygon points="5,3 17,10 5,17" fill="currentColor"/>
+              </svg>
+              Run Validation
+            </span>
+            <span class="btn-run-shine"></span>
+          </button>
+        </div>
       </div>
-    </div>
+
+      <!-- Info chips -->
+      <div class="info-chips">
+        <div class="ichip">
+          <div class="ichip-icon err-chip-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+              <line x1="7" y1="7" x2="13" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <line x1="13" y1="7" x2="7" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+          </div>
+          <div>
+            <strong>ERROR</strong>
+            <p>Cable not found · Usage ≥ 50%</p>
+          </div>
+        </div>
+        <div class="ichip">
+          <div class="ichip-icon warn-chip-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <path d="M10 2L2 18h16L10 2z" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+              <line x1="10" y1="9" x2="10" y2="13" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              <circle cx="10" cy="15.5" r="0.8" fill="currentColor"/>
+            </svg>
+          </div>
+          <div>
+            <strong>WARNING</strong>
+            <p>BESO equals zero</p>
+          </div>
+        </div>
+        <div class="ichip">
+          <div class="ichip-icon ok-chip-icon">
+            <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+              <circle cx="10" cy="10" r="8" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M6.5 10l2.5 2.5L13.5 7.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <strong>OK</strong>
+            <p>All checks passed</p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
-  <!-- PAGE 2: RESULTS -->
+  <!-- ══════════════════════ PAGE 2: RESULTS ══════════════════════ -->
   <main id="page-results" class="page">
-    <div class="page-content">
+    <div class="results-container">
 
-      <div class="results-topbar">
-        <div class="page-title-block">
-          <h1>Validation Results</h1>
-          <p class="subtitle" id="resultsMeta">—</p>
+      <!-- Results header -->
+      <div class="res-header">
+        <div class="res-title-group">
+          <div class="res-title-icon">
+            <svg viewBox="0 0 28 28" fill="none" width="28" height="28">
+              <circle cx="14" cy="14" r="13" fill="#1e3a8a" stroke="#3b82f6" stroke-width="1.5"/>
+              <path d="M8 14l4 4 8-8" stroke="#60a5fa" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <h1 class="res-title">Validation Results</h1>
+            <p class="res-sub" id="resultsMeta">—</p>
+          </div>
         </div>
-        <button class="btn-back" id="btnBack">← New Validation</button>
+        <button class="btn-back" id="btnBack">
+          <svg viewBox="0 0 20 20" fill="none" width="16" height="16">
+            <path d="M16 10H4M8 6l-4 4 4 4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          New Validation
+        </button>
       </div>
 
-      <!-- Summary -->
-      <div class="summary-strip">
-        <div class="summary-card total">
-          <div class="summary-num" id="sumTotal">0</div>
-          <div class="summary-label">Total Cables</div>
+      <!-- Summary cards -->
+      <div class="sum-grid">
+        <div class="sum-card sc-blue">
+          <div class="sc-top">
+            <div class="sc-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                <path d="M4 6h16M4 10h16M4 14h8" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+                <circle cx="18" cy="18" r="5" fill="currentColor" fill-opacity="0.15" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M16 18h4M18 16v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="sc-num" id="sumTotal">0</span>
+          </div>
+          <span class="sc-lbl">Total Cables</span>
+          <div class="sc-glow blue-glow"></div>
         </div>
-        <div class="summary-card ok">
-          <div class="summary-num" id="sumOk">0</div>
-          <div class="summary-label">OK</div>
+        <div class="sum-card sc-green">
+          <div class="sc-top">
+            <div class="sc-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                <path d="M8 12l2.5 2.5L16 9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <span class="sc-num" id="sumOk">0</span>
+          </div>
+          <span class="sc-lbl">Passed OK</span>
+          <div class="sc-glow green-glow"></div>
         </div>
-        <div class="summary-card warning">
-          <div class="summary-num" id="sumWarn">0</div>
-          <div class="summary-label">Warnings</div>
+        <div class="sum-card sc-amber">
+          <div class="sc-top">
+            <div class="sc-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                <path d="M12 3L2 21h20L12 3z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/>
+                <line x1="12" y1="10" x2="12" y2="15" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <circle cx="12" cy="18" r="1" fill="currentColor"/>
+              </svg>
+            </div>
+            <span class="sc-num" id="sumWarn">0</span>
+          </div>
+          <span class="sc-lbl">Warnings</span>
+          <div class="sc-glow amber-glow"></div>
         </div>
-        <div class="summary-card error">
-          <div class="summary-num" id="sumErr">0</div>
-          <div class="summary-label">Errors</div>
+        <div class="sum-card sc-red">
+          <div class="sc-top">
+            <div class="sc-icon">
+              <svg viewBox="0 0 24 24" fill="none" width="22" height="22">
+                <circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.6"/>
+                <line x1="8.5" y1="8.5" x2="15.5" y2="15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+                <line x1="15.5" y1="8.5" x2="8.5" y2="15.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+              </svg>
+            </div>
+            <span class="sc-num" id="sumErr">0</span>
+          </div>
+          <span class="sc-lbl">Errors</span>
+          <div class="sc-glow red-glow"></div>
         </div>
       </div>
 
-      <!-- Filters -->
-      <div class="filter-bar">
-        <span class="filter-label">Filter:</span>
-        <button class="filter-btn active" data-filter="all">All</button>
-        <button class="filter-btn" data-filter="ERROR">Errors</button>
-        <button class="filter-btn" data-filter="WARNING">Warnings</button>
-        <button class="filter-btn" data-filter="OK">OK</button>
+      <!-- Chart + filters row -->
+      <div class="chart-filter-row">
+        <!-- Mini donut -->
+        <div class="donut-wrap">
+          <svg id="donutSvg" viewBox="-5 -5 110 110" width="120" height="120">
+            <circle cx="50" cy="50" r="40" fill="none" stroke="#1e293b" stroke-width="16"/>
+            <circle id="d-ok"   cx="50" cy="50" r="40" fill="none" stroke="#22c55e" stroke-width="16"
+              stroke-dasharray="0 251" stroke-dashoffset="62.75" stroke-linecap="round"
+              style="transition:stroke-dasharray .7s ease; transform-origin:50px 50px; transform:rotate(-90deg)"/>
+            <circle id="d-warn" cx="50" cy="50" r="40" fill="none" stroke="#f59e0b" stroke-width="16"
+              stroke-dasharray="0 251" stroke-dashoffset="62.75" stroke-linecap="round"
+              style="transition:stroke-dasharray .7s ease .1s; transform-origin:50px 50px; transform:rotate(-90deg)"/>
+            <circle id="d-err"  cx="50" cy="50" r="40" fill="none" stroke="#ef4444" stroke-width="16"
+              stroke-dasharray="0 251" stroke-dashoffset="62.75" stroke-linecap="round"
+              style="transition:stroke-dasharray .7s ease .2s; transform-origin:50px 50px; transform:rotate(-90deg)"/>
+            <text x="50" y="46" text-anchor="middle" fill="#f1f5f9" font-size="18" font-weight="600" font-family="'IBM Plex Mono',monospace" id="donutPct">—</text>
+            <text x="50" y="60" text-anchor="middle" fill="#475569" font-size="9" font-family="'Inter',sans-serif">pass rate</text>
+          </svg>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-group">
+          <p class="filter-title">Filter results</p>
+          <div class="filter-btns">
+            <button class="fbtn fbtn-active" data-filter="all">
+              <span class="fbtn-dot" style="background:#64748b"></span>All
+            </button>
+            <button class="fbtn" data-filter="ERROR">
+              <span class="fbtn-dot" style="background:#ef4444"></span>Errors only
+            </button>
+            <button class="fbtn" data-filter="WARNING">
+              <span class="fbtn-dot" style="background:#f59e0b"></span>Warnings only
+            </button>
+            <button class="fbtn" data-filter="OK">
+              <span class="fbtn-dot" style="background:#22c55e"></span>Passed only
+            </button>
+          </div>
+        </div>
       </div>
 
-      <!-- Table -->
-      <div class="table-wrapper">
-        <table class="results-table" id="resultsTable">
+      <!-- Results table -->
+      <div class="table-wrap">
+        <table class="rtable">
           <thead>
             <tr>
-              <th>#</th>
-              <th>Cable</th>
+              <th class="th-num">#</th>
+              <th>
+                <svg viewBox="0 0 16 16" fill="none" width="13" height="13" style="vertical-align:middle;margin-right:4px">
+                  <rect x="2" y="2" width="12" height="12" rx="2" stroke="currentColor" stroke-width="1.2"/>
+                  <line x1="5" y1="6" x2="11" y2="6" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                  <line x1="5" y1="9" x2="9" y2="9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
+                </svg>
+                Cable
+              </th>
               <th>Usage %</th>
               <th>BESO</th>
               <th>Status</th>
               <th>Reason</th>
             </tr>
           </thead>
-          <tbody id="resultsBody">
-          </tbody>
+          <tbody id="resultsBody"></tbody>
         </table>
-        <div class="no-results" id="noResults" style="display:none;">No rows match the selected filter.</div>
+        <div class="no-rows" id="noResults" style="display:none">
+          <svg viewBox="0 0 60 60" fill="none" width="52" height="52">
+            <circle cx="30" cy="30" r="28" stroke="#1e293b" stroke-width="2"/>
+            <path d="M18 30h24M24 22l-6 8 6 8" stroke="#334155" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <p>No entries match this filter.</p>
+        </div>
       </div>
 
     </div>

@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Settings — ACS Tracker</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════
+     TOAST CONTAINER
+════════════════════════════════════════════════════════ -->
+<div id="toast-container" class="toast-container"></div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MODALS
+════════════════════════════════════════════════════════ -->
+
+<!-- ── Buffer Modal ── -->
+<div id="buffer-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="buffer-modal-title" class="modal-title">ADD BUFFER</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <form id="buffer-modal-form">
+      <div class="modal-body">
+        <div class="form-group mb-2">
+          <label class="form-label">Buffer Type *</label>
+          <select id="buffer-name-select" class="form-select">
+            <option value="Puffer MM">Puffer MM</option>
+            <option value="Puffer INR">Puffer INR</option>
+            <option value="Puffer Palette">Puffer Palette</option>
+            <option value="Puffer BS">Puffer BS</option>
+          </select>
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label">Google Sheet URL *</label>
+          <input
+            id="buffer-url-input"
+            class="form-input"
+            type="url"
+            placeholder="https://docs.google.com/spreadsheets/d/..."
+          />
+          <div class="form-hint mt-1">
+            The sheet must be published: File → Share → Publish to web → CSV
+          </div>
+          <div id="buffer-url-preview" class="url-preview"></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" id="btn-test-buffer-url" class="btn btn-secondary btn-sm">
+            ⚡ Test Connection
+          </button>
+          <div id="buffer-test-result"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Buffer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── BG Modal ── -->
+<div id="bg-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="bg-modal-title" class="modal-title">ADD BG</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <form id="bg-modal-form">
+      <div class="modal-body">
+        <div class="form-group">
+          <label class="form-label">BG Name *</label>
+          <input
+            id="bg-name-input"
+            class="form-input"
+            type="text"
+            placeholder="e.g. BG1, BG2, BG-Alpha..."
+          />
+          <div class="form-hint mt-1">
+            Each BG groups production lines and sections. You can add lines after creating the BG.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save BG</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ── Line Modal ── -->
+<div id="line-modal" class="modal-backdrop">
+  <div class="modal">
+    <div class="modal-header">
+      <h2 id="line-modal-title" class="modal-title">ADD PRODUCTION LINE</h2>
+      <button class="modal-close">✕</button>
+    </div>
+    <form id="line-modal-form">
+      <div class="modal-body">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">BG *</label>
+            <select id="line-bg-select" class="form-select">
+              <option value="">— Select BG —</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Section *</label>
+            <select id="line-section-select" class="form-select">
+              <option value="MM">MM</option>
+              <option value="BASIS">BASIS</option>
+              <option value="THS">THS</option>
+              <option value="COC">COC</option>
+              <option value="INR">INR</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label">Line Name *</label>
+          <input
+            id="line-name-input"
+            class="form-input"
+            type="text"
+            placeholder="e.g. Linie 1, Line A, MM-01..."
+          />
+        </div>
+
+        <div class="form-group mb-2">
+          <label class="form-label">Google Sheet URL *</label>
+          <input
+            id="line-url-input"
+            class="form-input"
+            type="url"
+            placeholder="https://docs.google.com/spreadsheets/d/..."
+          />
+          <div class="form-hint mt-1">
+            Each tab in this sheet should represent a Takt/Rack. Format: <em>Takt1 Regale6</em>, <em>Takt2 Rack1</em>...
+          </div>
+          <div id="line-url-preview" class="url-preview"></div>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button type="button" id="btn-test-line-url" class="btn btn-secondary btn-sm">
+            ⚡ Test Connection
+          </button>
+          <div id="line-test-result"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-close-modal>Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Line</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     APP WRAPPER
+════════════════════════════════════════════════════════ -->
+<div class="app-wrapper">
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="header-inner">
+      <a class="header-brand" href="index.html">
+        <div class="logo-icon">ACS</div>
+        <div class="brand-text-group">
+          <span class="brand-title">ACS Tracker</span>
+          <span class="brand-sub">Configuration</span>
+        </div>
+      </a>
+
+      <nav class="header-nav">
+        <a class="nav-link" href="index.html">Search</a>
+        <a class="nav-link active" href="settings.html">Settings</a>
+      </nav>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="main-content">
+
+    <!-- Page title -->
+    <div style="margin-bottom:1.5rem;">
+      <p style="font-family:var(--mono);font-size:0.62rem;color:var(--cyan);letter-spacing:4px;text-transform:uppercase;margin-bottom:6px;">
+        System Configuration
+      </p>
+      <h1 style="font-family:var(--display);font-size:1.8rem;font-weight:700;letter-spacing:3px;text-transform:uppercase;color:var(--text-primary);">
+        Settings
+      </h1>
+      <p style="font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);letter-spacing:1px;margin-top:4px;">
+        Configure Google Sheets sources, BGs, production lines, and buffers. No code editing required.
+      </p>
+    </div>
+
+    <div class="settings-layout">
+
+      <!-- ───── SIDEBAR ───── -->
+      <aside class="settings-sidebar">
+        <div class="sidebar-header">Navigation</div>
+        <nav class="sidebar-nav">
+          <a class="sidebar-nav-item active" data-section="section-buffers">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+            Buffers
+            <span id="count-buffers" style="margin-left:auto;background:var(--border);border-radius:20px;padding:1px 8px;font-size:0.6rem;">0</span>
+          </a>
+          <a class="sidebar-nav-item" data-section="section-bgs">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+            BGs
+            <span id="count-bgs" style="margin-left:auto;background:var(--border);border-radius:20px;padding:1px 8px;font-size:0.6rem;">0</span>
+          </a>
+          <a class="sidebar-nav-item" data-section="section-lines">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Prod. Lines
+            <span id="count-lines" style="margin-left:auto;background:var(--border);border-radius:20px;padding:1px 8px;font-size:0.6rem;">0</span>
+          </a>
+          <a class="sidebar-nav-item" data-section="section-system">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+            System
+          </a>
+        </nav>
+      </aside>
+
+      <!-- ───── PANELS ───── -->
+      <div class="settings-main">
+
+        <!-- ═══ HOW TO USE ════════════════════════════ -->
+        <div class="settings-panel" style="border-color:var(--blue-dim);">
+          <div class="panel-header" style="background:rgba(26,108,245,0.08);">
+            <div class="panel-title">
+              ℹ How to Connect Google Sheets
+              <span class="title-badge">QUICK GUIDE</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1.5rem;">
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Step 1 — Open your Sheet</div>
+                <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);line-height:1.8;">
+                  Open your Google Sheet. It must be a spreadsheet with your accessory or buffer data.
+                </div>
+              </div>
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Step 2 — Publish to Web</div>
+                <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);line-height:1.8;">
+                  File → Share → Publish to web<br>
+                  Select: <strong>Entire document</strong> → <strong>CSV</strong><br>
+                  Click Publish.
+                </div>
+              </div>
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Step 3 — Copy URL</div>
+                <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);line-height:1.8;">
+                  Copy the spreadsheet URL from your browser address bar and paste it here.
+                </div>
+              </div>
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--orange);letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;">Tab Structure (Lines)</div>
+                <div style="font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);line-height:1.8;">
+                  Each tab = one Takt/Rack.<br>
+                  Name tabs like: <code style="color:var(--cyan)">Takt1 Regale6</code>, <code style="color:var(--cyan)">Takt2 Rack1</code><br>
+                  Columns: Accessoire | Regale/Rack | Position
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ BUFFERS ═══════════════════════════════ -->
+        <div id="section-buffers" class="settings-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+              Buffer Configuration
+              <span class="title-badge">PUFFER</span>
+            </div>
+            <button id="btn-add-buffer" class="btn btn-primary btn-sm">+ Add Buffer</button>
+          </div>
+          <div class="panel-body">
+            <p style="font-family:var(--mono);font-size:0.7rem;color:var(--text-secondary);letter-spacing:1px;margin-bottom:1rem;line-height:1.8;">
+              Configure the 4 buffer types: <strong>Puffer MM</strong>, <strong>Puffer INR</strong>, <strong>Puffer Palette</strong>, <strong>Puffer BS</strong>.<br>
+              Each buffer sheet should have columns: <code style="color:var(--cyan)">ORT</code> | <code style="color:var(--cyan)">Articles</code>
+            </p>
+            <div id="buffer-list" class="config-list">
+              <p class="text-muted mono" style="font-size:0.75rem;letter-spacing:1px;">No buffers configured yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ BGs ════════════════════════════════════ -->
+        <div id="section-bgs" class="settings-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+              BG Management
+              <span class="title-badge">DYNAMIC</span>
+            </div>
+            <button id="btn-add-bg" class="btn btn-primary btn-sm">+ Add BG</button>
+          </div>
+          <div class="panel-body">
+            <p style="font-family:var(--mono);font-size:0.7rem;color:var(--text-secondary);letter-spacing:1px;margin-bottom:1rem;line-height:1.8;">
+              BGs (Baugruppen) group production lines. Each BG can contain multiple sections (MM, BASIS, THS, COC, INR)
+              with multiple production lines. Add as many BGs as your factory layout requires.
+            </p>
+            <div id="bg-list" class="config-list">
+              <p class="text-muted mono" style="font-size:0.75rem;letter-spacing:1px;">No BGs configured yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ PRODUCTION LINES ══════════════════════ -->
+        <div id="section-lines" class="settings-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+              Production Lines
+              <span class="title-badge">GOOGLE SHEETS</span>
+            </div>
+            <button id="btn-add-line" class="btn btn-primary btn-sm">+ Add Line</button>
+          </div>
+          <div class="panel-body">
+            <p style="font-family:var(--mono);font-size:0.7rem;color:var(--text-secondary);letter-spacing:1px;margin-bottom:1rem;line-height:1.8;">
+              Each production line maps to one Google Sheet. The sheet can have multiple tabs (one per Takt/Rack).
+              Tabs should be named like <code style="color:var(--cyan)">Takt1 Regale6</code> or <code style="color:var(--cyan)">Takt2 Rack1</code>.
+            </p>
+            <div id="lines-list" class="config-list">
+              <p class="text-muted mono" style="font-size:0.75rem;letter-spacing:1px;">No production lines configured yet.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ SYSTEM ════════════════════════════════ -->
+        <div id="section-system" class="settings-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+              System & Data
+            </div>
+          </div>
+          <div class="panel-body">
+
+            <!-- Config backup -->
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text-secondary);letter-spacing:3px;text-transform:uppercase;margin-bottom:0.75rem;">Configuration Backup</div>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button id="btn-export-config" class="btn btn-secondary">
+                  ↓ Export Config JSON
+                </button>
+                <button id="btn-import-config" class="btn btn-secondary">
+                  ↑ Import Config JSON
+                </button>
+                <input id="import-file-input" type="file" accept=".json" class="hidden" />
+              </div>
+              <p style="font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);letter-spacing:1px;margin-top:0.5rem;">
+                Export your config to share between devices. Import to restore a previous config.
+              </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Cache -->
+            <div style="margin-bottom:1.5rem;">
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--text-secondary);letter-spacing:3px;text-transform:uppercase;margin-bottom:0.75rem;">Sheet Cache</div>
+              <button id="btn-clear-cache" class="btn btn-orange">
+                ✕ Clear Sheet Cache
+              </button>
+              <p style="font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);letter-spacing:1px;margin-top:0.5rem;">
+                Sheets are cached for 5 minutes locally. Clear the cache to force a fresh reload on next search.
+              </p>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Danger zone -->
+            <div>
+              <div style="font-family:var(--mono);font-size:0.65rem;color:var(--red);letter-spacing:3px;text-transform:uppercase;margin-bottom:0.75rem;">Danger Zone</div>
+              <button id="btn-reset-config" class="btn btn-danger">
+                ⚠ Reset All Configuration
+              </button>
+              <p style="font-family:var(--mono);font-size:0.65rem;color:var(--text-dim);letter-spacing:1px;margin-top:0.5rem;">
+                This will delete ALL BGs, lines, and buffer configurations from this device. This cannot be undone.
+              </p>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ═══ DATA FORMAT REFERENCE ═════════════════ -->
+        <div class="settings-panel">
+          <div class="panel-header">
+            <div class="panel-title">
+              📋 Data Format Reference
+              <span class="title-badge">HELP</span>
+            </div>
+          </div>
+          <div class="panel-body">
+            <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:1.5rem;">
+
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--orange);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Buffer Sheet Format</div>
+                <div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:4px;padding:12px;font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);line-height:2;">
+                  <div style="color:var(--text-dim);margin-bottom:6px;">Column headers (row 1):</div>
+                  <div style="color:var(--cyan);">ORT &nbsp;&nbsp;&nbsp;&nbsp; | Articles</div>
+                  <div style="color:var(--text-primary);">R001001 | G0421290</div>
+                  <div style="color:var(--text-primary);">R001002 | G0123456</div>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--blue);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Production Line Sheet Format</div>
+                <div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:4px;padding:12px;font-family:var(--mono);font-size:0.72rem;color:var(--text-secondary);line-height:2;">
+                  <div style="color:var(--text-dim);margin-bottom:4px;">Tab name: <span style="color:var(--cyan)">Takt1 Regale6</span></div>
+                  <div style="color:var(--cyan);">Accessoire | Regale/Rack | Position</div>
+                  <div style="color:var(--text-primary);">G0221146 &nbsp;| Regale 6 &nbsp; | TAKT 1</div>
+                  <div style="color:var(--text-primary);">G0312200 &nbsp;| Regale 6 &nbsp; | TAKT 1</div>
+                </div>
+              </div>
+
+              <div>
+                <div style="font-family:var(--mono);font-size:0.65rem;color:var(--green);letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">Unified Result Object</div>
+                <div style="background:var(--bg-deep);border:1px solid var(--border);border-radius:4px;padding:12px;font-family:var(--mono);font-size:0.68rem;color:var(--text-secondary);line-height:2;">
+                  <div>{</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">matnr</span>: <span style="color:var(--green);">"G0221146"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">accessoire</span>: <span style="color:var(--green);">"G0221146"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">buffer</span>: <span style="color:var(--green);">"Puffer MM"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">section</span>: <span style="color:var(--green);">"MM"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">ligne</span>: <span style="color:var(--green);">"Linie 1"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">position</span>: <span style="color:var(--green);">"TAKT 1"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">rack</span>: <span style="color:var(--green);">"Regale 6"</span>,</div>
+                  <div>&nbsp; <span style="color:var(--cyan);">bg</span>: <span style="color:var(--green);">"BG1"</span></div>
+                  <div>}</div>
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </div>
+      <!-- /settings-main -->
+
+    </div>
+    <!-- /settings-layout -->
+
+  </main>
+
+  <footer class="site-footer">
+    ACS Tracker · Settings &amp; Configuration · Internal Factory Tool
+  </footer>
+
+</div>
+<!-- /app-wrapper -->
+
+<script src="storage.js"></script>
+<script src="sheets.js"></script>
+<script src="ui.js"></script>
+<script src="settings.js"></script>
+
+</body>
+</html>
